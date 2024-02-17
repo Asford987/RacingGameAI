@@ -1,0 +1,23 @@
+[tool.poetry]
+name = "self-driving"
+version = "0.1.0"
+description = ""
+authors = ["varad-comrad <fabricio_asfora_002@hotmail.com>"]
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = "^3.11"
+pygame = "^2.5.2"
+cython = "^3.0.8"
+torch = "^2.2.0"
+torchvision = "^0.17.0"
+gymnasium = "^0.29.1"
+matplotlib = "^3.8.2"
+
+
+[tool.poetry.group.dev.dependencies]
+jupyter = "^1.0.0"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
