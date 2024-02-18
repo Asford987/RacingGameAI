@@ -43,6 +43,8 @@ class Game:
     def draw_all(self):
         self.draw_all_assets()
         self.draw_cars()
+        for point in GameWindow.PATH.value:
+            pygame.draw.circle(self.window, (255, 0, 0), point, 5)
         pygame.display.update()
             
     def game_loop(self):
@@ -59,7 +61,7 @@ class Game:
 
             for car in self.cars.values():
                 car.drive()
-                car.car_vision(True)
+                car.car_vision(False)
                 if car.collide(GameAssets.BORDER_MASK.value) != None:
                     car.reset()
                 car.draw(self.window)

@@ -1,4 +1,5 @@
 from abc import ABC, abstractmethod
+from pprint import pprint
 import pygame
 import math
 from ai import AI
@@ -71,15 +72,18 @@ class AbstractCar(ABC):
 
 
     def car_vision(self, draw=False):
+        # TODO: Make it process in parallel (multiprocessing)
         self.distances = [self.get_collision_with_track(angle, draw) for angle in range(0,360, 45)]
         if draw:
+            self.draw(GameWindow.WINDOW.value)
             pygame.display.update()
-        print(self.distances)
+        print('distances:')
+        pprint(dict(zip([f'{angle} degrees' for angle in range(0,360, 45)], self.distances)))
 
         return self.distances
 
-    def ai_drive(self, draw=False) -> None:
-        next_moves = self.ai.eval_next_move(self.car_vision(draw))
+    def ai_drive(self, draw=False, log=True) -> None:
+        next_moves = self.ai.eval_next_move(self.car_vision(draw), log)
         self.rotate(next_moves[0], next_moves[1])
         self.move(next_moves[2], next_moves[3])
 
