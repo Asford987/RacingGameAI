@@ -1,5 +1,5 @@
-from game import Game
-from car import CarFactory
+from self_driving.game import Game
+from self_driving.car import CarFactory
 
 car = CarFactory.create_car("red", True, 5, 5)
 

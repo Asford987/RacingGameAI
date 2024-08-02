@@ -1,10 +1,9 @@
 from abc import ABC, abstractmethod
-from pprint import pprint
 import pygame
 import math
-from ai import AI
-from utils import *
-from utils import GameAssets
+from self_driving.ai import AI
+from self_driving.utils import *
+from self_driving.utils import GameAssets
 
 
 class AbstractCar(ABC):
@@ -72,18 +71,15 @@ class AbstractCar(ABC):
 
 
     def car_vision(self, draw=False):
-        # TODO: Make it process in parallel (multiprocessing)
         self.distances = [self.get_collision_with_track(angle, draw) for angle in range(0,360, 45)]
         if draw:
             self.draw(GameWindow.WINDOW.value)
             pygame.display.update()
-        print('distances:')
-        pprint(dict(zip([f'{angle} degrees' for angle in range(0,360, 45)], self.distances)))
 
         return self.distances
 
     def ai_drive(self, draw=False, log=True) -> None:
-        next_moves = self.ai.eval_next_move(self.car_vision(draw), log)
+        next_moves = self.ai.take_action(self.car_vision(draw), log)
         self.rotate(next_moves[0], next_moves[1])
         self.move(next_moves[2], next_moves[3])
 
@@ -92,6 +88,10 @@ class AbstractCar(ABC):
 
     def draw(self, win):
         blit_rotate_center(win, self.asset, self.pos, self.curr_rot)
+        
+    def apply_reward(self, reward: float):
+        if self.is_player_car:
+            self.ai.apply_reward(reward)
 
     def collide(self, mask, x=0, y=0):
         car_mask = pygame.mask.from_surface(self.asset)
@@ -103,8 +103,6 @@ class AbstractCar(ABC):
         self.pos = self.START_POS
         self.curr_rot = 0
         self.curr_vel = 0
-        if not self.is_player_car:
-            self.ai.hit_wall()
 
 
 class RedCar(AbstractCar):
