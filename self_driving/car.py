@@ -79,9 +79,23 @@ class AbstractCar(ABC):
         return self.distances
 
     def ai_drive(self, draw=False, log=True) -> None:
-        next_moves = self.ai.take_action(self.car_vision(draw), log)
-        self.rotate(next_moves[0], next_moves[1])
-        self.move(next_moves[2], next_moves[3])
+        next_moves = self.ai.take_action(self.car_vision(draw) + [self.curr_vel, self.curr_rot], log)
+        if next_moves[0] > 0.66:
+            mov = True, False
+        elif next_moves[0] < -0.66:
+            mov = False, True
+        else:
+            mov = False, False
+        
+        if next_moves[1] > 0.66:
+            rot = True, False
+        elif next_moves[1] < -0.66:
+            rot = False, True
+        else:
+            rot = False, False
+        
+        self.move(*mov)
+        self.rotate(*rot)
 
     def drive(self, draw=False) -> None:
         return self.move_player() if self.is_player_car else self.ai_drive(draw)
