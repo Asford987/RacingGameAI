@@ -79,6 +79,8 @@ class AbstractCar(ABC):
         return self.distances
 
     def ai_drive(self, draw=False, log=True) -> None:
+        self.prev_state = self.distances + [self.curr_vel, self.curr_rot]
+        
         next_moves = self.ai.take_action(self.car_vision(draw) + [self.curr_vel, self.curr_rot], log)
         if next_moves[0] > 0.66:
             mov = True, False
@@ -93,7 +95,6 @@ class AbstractCar(ABC):
             rot = False, True
         else:
             rot = False, False
-        
         self.move(*mov)
         self.rotate(*rot)
 
@@ -103,9 +104,16 @@ class AbstractCar(ABC):
     def draw(self, win):
         blit_rotate_center(win, self.asset, self.pos, self.curr_rot)
         
-    def apply_reward(self, reward: float):
-        if self.is_player_car:
-            self.ai.apply_reward(reward)
+    def compute_reward(self) -> None:
+        pass
+        
+    def compute_and_apply_reward(self) -> None:
+        if not self.is_player_car:
+            self.compute_reward()
+            self.apply_reward()
+        
+    def apply_reward(self) -> None:
+        self.ai.apply_reward(self.reward)
 
     def collide(self, mask, x=0, y=0):
         car_mask = pygame.mask.from_surface(self.asset)
