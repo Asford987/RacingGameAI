@@ -82,19 +82,9 @@ class AbstractCar(ABC):
         self.prev_state = self.distances + [self.curr_vel, self.curr_rot]
         
         next_moves = self.ai.act(self.car_vision(draw) + [self.curr_vel, self.curr_rot], log)
-        if next_moves[0] > 0.66:
-            mov = True, False
-        elif next_moves[0] < -0.66:
-            mov = False, True
-        else:
-            mov = False, False
-        
-        if next_moves[1] > 0.66:
-            rot = True, False
-        elif next_moves[1] < -0.66:
-            rot = False, True
-        else:
-            rot = False, False
+        mov = (next_moves[0] > 0.5, next_moves[1] > 0.5)
+        rot = (next_moves[2] > 0.5, next_moves[3] > 0.5)
+        self.action = next_moves
         self.move(*mov)
         self.rotate(*rot)
         self.curr_state = self.distances + [self.curr_vel, self.curr_rot]
@@ -110,7 +100,7 @@ class AbstractCar(ABC):
         
         if self.collide(GameAssets.BORDER_MASK.value) != None:
             reward -= 100
-            return reward
+            return reward, True
         
         next_dot = self.dots[0]
         x, y = self.pos
@@ -121,14 +111,14 @@ class AbstractCar(ABC):
             self.dots.append(next_dot)
             reward += 10
         else:
-            reward -= distance / 10
+            reward -= math.sqrt(distance) / 10
         reward += self.curr_vel
-        return reward
+        return reward, False
         
     def register_action(self) -> None:
         if not self.is_player_car:
-            reward = self.compute_reward()
-            self.ai.apply_reward(reward, self.prev_state, self.curr_state)
+            reward, done = self.compute_reward()
+            self.ai.apply_reward(reward, self.prev_state, self.action, self.curr_state, done)
 
     def collide(self, mask, x=0, y=0):
         car_mask = pygame.mask.from_surface(self.asset)
