@@ -61,7 +61,7 @@ class Game:
     def car_step(self, car: AbstractCar) -> None:
         car.car_vision(False)
         car.drive()
-        car.compute_and_apply_reward()
+        car.register_action()
         if car.collide(GameAssets.BORDER_MASK.value) != None:
             car.reset()
         car.draw(self.window)

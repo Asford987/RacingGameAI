@@ -10,10 +10,10 @@ class AbstractCar(ABC):
     def __init__(self, max_vel, rot_vel, is_player_car, start_pos=None, acceleration=0.1) -> None:
         super().__init__()
         self.distances = []
-        self.current_point = 0
         self.is_player_car = is_player_car
         if not is_player_car:
             self.ai = AI()
+            self.dots = GameWindow.PATH.value
         self.curr_vel = 0
         self.curr_rot = 0
         self._max_vel = max_vel
@@ -81,7 +81,7 @@ class AbstractCar(ABC):
     def ai_drive(self, draw=False, log=True) -> None:
         self.prev_state = self.distances + [self.curr_vel, self.curr_rot]
         
-        next_moves = self.ai.take_action(self.car_vision(draw) + [self.curr_vel, self.curr_rot], log)
+        next_moves = self.ai.act(self.car_vision(draw) + [self.curr_vel, self.curr_rot], log)
         if next_moves[0] > 0.66:
             mov = True, False
         elif next_moves[0] < -0.66:
@@ -97,6 +97,7 @@ class AbstractCar(ABC):
             rot = False, False
         self.move(*mov)
         self.rotate(*rot)
+        self.curr_state = self.distances + [self.curr_vel, self.curr_rot]
 
     def drive(self, draw=False) -> None:
         return self.move_player() if self.is_player_car else self.ai_drive(draw)
@@ -104,16 +105,30 @@ class AbstractCar(ABC):
     def draw(self, win):
         blit_rotate_center(win, self.asset, self.pos, self.curr_rot)
         
-    def compute_reward(self) -> None:
-        pass
+    def compute_reward(self) -> float:
+        reward = 0
         
-    def compute_and_apply_reward(self) -> None:
+        if self.collide(GameAssets.BORDER_MASK.value) != None:
+            reward -= 100
+            return reward
+        
+        next_dot = self.dots[0]
+        x, y = self.pos
+        x_dot, y_dot = next_dot
+        distance = math.sqrt((x - x_dot) ** 2 + (y - y_dot) ** 2)
+        if distance <= 10:
+            self.dots.pop(0)
+            self.dots.append(next_dot)
+            reward += 10
+        else:
+            reward -= distance / 10
+        reward += self.curr_vel
+        return reward
+        
+    def register_action(self) -> None:
         if not self.is_player_car:
-            self.compute_reward()
-            self.apply_reward()
-        
-    def apply_reward(self) -> None:
-        self.ai.apply_reward(self.reward)
+            reward = self.compute_reward()
+            self.ai.apply_reward(reward, self.prev_state, self.curr_state)
 
     def collide(self, mask, x=0, y=0):
         car_mask = pygame.mask.from_surface(self.asset)
